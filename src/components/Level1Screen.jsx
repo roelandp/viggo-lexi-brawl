@@ -47,7 +47,7 @@ function Monster({ position }) {
   // Kies een willekeurig karakter (a-r)
   const charIndex = useMemo(() => Math.floor(Math.random() * 18), [])
   const charLetter = String.fromCharCode(97 + charIndex) // a-r
-  const modelPath = `/glbs/character-${charLetter}.glb`
+  const modelPath = `/viggo-lexi-brawl/glbs/character-${charLetter}.glb`
   
   const { scene } = useGLTF(modelPath)
   
