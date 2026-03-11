@@ -27,12 +27,15 @@ export const useGameStore = create((set, get) => ({
   selectToets: (toetsId) => {
     const toetsData = wordsData[toetsId]
     if (toetsData) {
+      // Get all questions and pick 15 random ones
+      const allQuestions = [...toetsData.questions]
+      const shuffled = allQuestions.sort(() => Math.random() - 0.5)
+      const selectedQuestions = shuffled.slice(0, 15)
+      
       playSound('gameStart')
-      // Randomize the order of questions
-      const shuffledQuestions = [...toetsData.questions].sort(() => Math.random() - 0.5)
       set({
         selectedToets: toetsId,
-        words: shuffledQuestions,
+        words: selectedQuestions,
         currentWordIndex: 0,
         score: 0,
         lives: 3,

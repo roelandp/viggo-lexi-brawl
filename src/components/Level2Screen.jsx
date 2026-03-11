@@ -153,14 +153,17 @@ function Scene({ isGateOpen }) {
 }
 
 // HUD Component
-function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrectAnswer }) {
+function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrectAnswer, inputRef, blurInput }) {
   const score = useGameStore((state) => state.score)
   const lives = useGameStore((state) => state.lives)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
   const currentWordIndex = useGameStore((state) => state.currentWordIndex)
   const words = useGameStore((state) => state.words)
   const goToMenu = useGameStore((state) => state.goToMenu)
-  const inputRef = useRef(null)
+  const localInputRef = useRef(null)
+  
+  // Use passed ref or local ref
+  const actualRef = inputRef || localInputRef
   
   // Auto-focus input on mount and screen change
   useEffect(() => {
@@ -263,17 +266,27 @@ function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrec
                     if (!showCorrectAnswer) handleSubmit()
                   }
                 }}
+                onBlur={() => {
+                  // Keep focus if showing correct answer
+                  if (!showCorrectAnswer && typedAnswer === '') {
+                    setTimeout(() => inputRef.current?.focus(), 100)
+                  }
+                }}
                 placeholder="Typ hier je antwoord..."
                 rows={1}
                 disabled={showCorrectAnswer}
-                className={`w-full px-4 py-3 text-4xl bg-transparent border-b-4 border-green-400 text-green-400 font-bold text-center resize-none overflow-hidden
+                className={`w-full px-4 py-3 text-4xl bg-transparent border-b-4 border-green-400 text-green-400 text-center resize-none overflow-hidden
                            focus:outline-none focus:border-green-300
                            placeholder:text-gray-500 placeholder:text-3xl placeholder:font-normal
                            ${showCorrectAnswer ? 'opacity-50' : ''}`}
                 style={{ 
                   fontFamily: 'SchoolschriftLG, Fredoka, cursive',
-                  textShadow: '0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
-                  minHeight: '3rem'
+                  fontWeight: '800',
+                  color: '#4ade80',
+                  WebkitTextFillColor: '#4ade80',
+                  textShadow: '0 0 2px #000000, 0 0 2px #000000, 0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
+                  minHeight: '3rem',
+                  caretColor: '#4ade80'
                 }}
                 autoComplete="off"
                 autoCorrect="off"
@@ -319,6 +332,7 @@ export default function Level2Screen() {
   const setTypedAnswer = useGameStore((state) => state.setTypedAnswer)
   const answerTyping = useGameStore((state) => state.answerTyping)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
+  const inputRef = useRef(null)
   const [isGateOpen, setIsGateOpen] = useState(false)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   
@@ -331,6 +345,11 @@ export default function Level2Screen() {
   }, [typedAnswer, currentQuestion])
   
   const handleSubmit = () => {
+    // Blur input to hide keyboard on iPad
+    if (inputRef.current) {
+      inputRef.current.blur()
+    }
+    
     // Check if answer is wrong
     const isCorrect = typedAnswer.toLowerCase().trim() === currentQuestion?.word.toLowerCase().trim()
     
@@ -364,6 +383,7 @@ export default function Level2Screen() {
         handleSubmit={handleSubmit}
         isGateOpen={isGateOpen}
         showCorrectAnswer={showCorrectAnswer}
+        inputRef={inputRef}
       />
     </div>
   )
