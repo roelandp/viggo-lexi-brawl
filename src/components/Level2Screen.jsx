@@ -153,7 +153,7 @@ function Scene({ isGateOpen }) {
 }
 
 // HUD Component
-function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrectAnswer, inputRef, blurInput }) {
+function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrectAnswer, inputRef, blurInput, hintsUsed, setHintsUsed }) {
   const score = useGameStore((state) => state.score)
   const lives = useGameStore((state) => state.lives)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
@@ -161,6 +161,7 @@ function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrec
   const words = useGameStore((state) => state.words)
   const goToMenu = useGameStore((state) => state.goToMenu)
   const localInputRef = useRef(null)
+  const [showHintPopup, setShowHintPopup] = useState(false)
   
   // Use passed ref or local ref
   const actualRef = inputRef || localInputRef
@@ -197,141 +198,215 @@ function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrec
     }
   }, [typedAnswer])
   
-  return (
-    <div className="absolute inset-0 flex flex-col">
-      {/* Top bar */}
-      <div className="p-4 flex justify-between items-start bg-gradient-to-b from-brawl-dark/90 to-transparent">
-        {/* Score */}
-        <div className="bg-brawl-dark-light/80 rounded-xl px-4 py-2 border-2 border-brawl-yellow">
-          <span className="text-brawl-yellow font-bold text-xl">⭐ {score}</span>
-        </div>
-        
-        {/* Lives */}
-        <div className="flex gap-1">
-          {[...Array(3)].map((_, i) => (
-            <span key={i} className="text-2xl">
-              {i < lives ? '❤️' : '💔'}
-            </span>
-          ))}
-        </div>
-        
-        {/* Back button */}
-        <button
-          onClick={goToMenu}
-          className="px-4 py-2 bg-brawl-dark-light/80 rounded-xl border-2 border-white text-white font-bold"
-        >
-          ← Menu
-        </button>
-      </div>
-      
-      {/* Question display - center of screen */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-brawl-dark-light/95 rounded-3xl px-8 py-6 border-4 border-brawl-orange max-w-lg text-center">
-          <div className="text-white text-lg opacity-80 mb-2">Schrijf het woord:</div>
-          <div className="text-3xl md:text-4xl font-bold text-brawl-yellow mb-4" style={{ fontFamily: 'Fredoka, cursive' }}>
-            "{currentQuestion?.definition}"
-          </div>
-          <div className="text-sm opacity-60 mb-4">
-            Hint: {currentQuestion?.hint}
-          </div>
-          
-          {/* Progress */}
-          <div className="text-white opacity-60 text-sm mb-4">
-            {currentWordIndex + 1} / {words.length}
-          </div>
-          
-          {/* Show correct answer feedback */}
-          {showCorrectAnswer && (
-            <div className="mb-4 p-4 bg-red-500/20 rounded-xl border-2 border-red-400">
-              <div className="text-red-400 font-bold text-2xl mb-1">
-                ✗ Fout!
-              </div>
-              <div className="text-white text-xl">
-                Het juiste antwoord was: <span className="text-green-400 font-bold">{currentQuestion?.word}</span>
-              </div>
-            </div>
-          )}
-          
-          {/* Input field - school writing style */}
-          <div className="relative w-full max-w-md mx-auto">
-            {/* Writing line */}
-            <div className="relative">
-              <textarea
-                ref={inputRef}
-                value={typedAnswer}
-                onChange={(e) => setTypedAnswer(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    if (!showCorrectAnswer) handleSubmit()
-                  }
-                }}
-                onBlur={() => {
-                  // Keep focus if showing correct answer
-                  if (!showCorrectAnswer && typedAnswer === '') {
-                    setTimeout(() => inputRef.current?.focus(), 100)
-                  }
-                }}
-                placeholder="Typ hier je antwoord..."
-                rows={1}
-                disabled={showCorrectAnswer}
-                className={`w-full px-4 py-3 text-4xl bg-transparent border-b-4 border-green-400 text-green-400 text-center resize-none overflow-hidden
-                           focus:outline-none focus:border-green-300
-                           placeholder:text-gray-500 placeholder:text-3xl placeholder:font-normal
-                           ${showCorrectAnswer ? 'opacity-50' : ''}`}
-                style={{ 
-                  fontFamily: 'SchoolschriftLG, Fredoka, cursive',
-                  fontWeight: '800',
-                  color: '#4ade80',
-                  WebkitTextFillColor: '#4ade80',
-                  textShadow: '0 0 2px #000000, 0 0 2px #000000, 0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
-                  minHeight: '3rem',
-                  caretColor: '#4ade80'
-                }}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-              />
-            </div>
-            
-            {/* Submit button */}
-            <button
-              onClick={handleSubmit}
-              disabled={showCorrectAnswer}
-              className={`mt-6 w-full py-4 rounded-xl border-4 border-white 
-                         text-white text-xl font-bold transition-all duration-200
-                         shadow-lg ${
-                           showCorrectAnswer 
-                             ? 'bg-gray-500 cursor-not-allowed' 
-                             : 'bg-brawl-orange hover:scale-105 hover:bg-brawl-yellow hover:border-brawl-orange active:scale-95'
-                         }`}
-              style={{ fontFamily: 'Fredoka, cursive' }}
-            >
-              {showCorrectAnswer ? 'Even wachten...' : 'Controleren ✓'}
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Gate status indicator */}
-      <div className="p-4 flex justify-center">
-        <div className={`px-6 py-2 rounded-full text-white font-bold ${
-          isGateOpen ? 'bg-green-500' : 'bg-red-500'
-        }`}>
-          {isGateOpen ? '🚪 Poort open!' : '🔒 Poort gesloten'}
-        </div>
-      </div>
-    </div>
-  )
+  // Handle hint button click
+  const handleHintClick = () => {
+    if (hintsUsed < 2) {
+      setHintsUsed(hintsUsed + 1)
+      setShowHintPopup(true)
+    }
+  }
+  
+  // Close hint popup
+  const closeHintPopup = () => {
+    setShowHintPopup(false)
+  }
+  
+  // Get hint button text
+  const getHintButtonText = () => {
+    if (hintsUsed >= 2) return 'Hints op'
+    if (hintsUsed === 1) return 'Hint (?) 1'
+    return 'Hint ? (2)'
+  }
+  
+   return (
+     <div className="absolute inset-0 flex flex-col">
+       {/* Top bar */}
+       <div className="p-4 flex justify-between items-start bg-gradient-to-b from-brawl-dark/90 to-transparent">
+         {/* Score */}
+         <div className="bg-brawl-dark-light/80 rounded-xl px-4 py-2 border-2 border-brawl-yellow">
+           <span className="text-brawl-yellow font-bold text-xl">⭐ {score}</span>
+         </div>
+         
+         {/* Lives and Hint button in one row */}
+         <div className="flex items-center gap-4">
+           <div className="flex gap-1">
+             {[...Array(3)].map((_, i) => (
+               <span key={i} className="text-2xl">
+                 {i < lives ? '❤️' : '💔'}
+               </span>
+             ))}
+           </div>
+           {/* Hint button in top right */}
+           <button
+             onClick={handleHintClick}
+             disabled={hintsUsed >= 2}
+             className={`flex items-center px-3 py-2 rounded-xl text-white font-bold text-sm transition-colors ${
+               hintsUsed >= 2 
+                 ? 'bg-gray-500/50 cursor-not-allowed' 
+                 : 'bg-brawl-blue/90 hover:bg-brawl-blue/80'
+             }`}
+           >
+             <span className="material-icons mr-1">lightbulb</span>
+             {getHintButtonText()}
+           </button>
+         </div>
+         
+         {/* Back button */}
+         <button
+           onClick={goToMenu}
+           className="px-4 py-2 bg-brawl-dark-light/80 rounded-xl border-2 border-white text-white font-bold"
+         >
+           ← Menu
+         </button>
+       </div>
+       
+       {/* Question display - center of screen */}
+       <div className="flex-1 flex items-center justify-center">
+         <div className="bg-brawl-dark-light/95 rounded-3xl px-8 py-6 border-4 border-brawl-orange max-w-lg text-center">
+           <div className="text-white text-lg opacity-80 mb-2">Schrijf het woord:</div>
+           <div className="text-3xl md:text-4xl font-bold text-brawl-yellow mb-4" style={{ fontFamily: 'Fredoka, cursive' }}>
+             "{currentQuestion?.definition}"
+           </div>
+           
+           {/* Progress */}
+           <div className="text-white opacity-60 text-sm mb-4">
+             {currentWordIndex + 1} / {words.length}
+           </div>
+           
+           {/* Show correct answer feedback */}
+           {showCorrectAnswer && (
+             <div className="mb-4 p-4 bg-red-500/20 rounded-xl border-2 border-red-400">
+               <div className="text-red-400 font-bold text-2xl mb-1">
+                 ✗ Fout!
+               </div>
+               <div className="text-white text-xl">
+                 Het juiste antwoord was: <span className="text-green-400 font-bold">{currentQuestion?.word}</span>
+               </div>
+             </div>
+           )}
+           
+           {/* Input field - school writing style */}
+           <div className="relative w-full max-w-md mx-auto">
+             {/* Writing line */}
+             <div className="relative">
+               <textarea
+                 ref={inputRef}
+                 value={typedAnswer}
+                 onChange={(e) => setTypedAnswer(e.target.value)}
+                 onKeyDown={(e) => {
+                   if (e.key === 'Enter') {
+                     e.preventDefault()
+                     if (!showCorrectAnswer) handleSubmit()
+                   }
+                 }}
+                 onBlur={() => {
+                   // Keep focus if showing correct answer
+                   if (!showCorrectAnswer && typedAnswer === '') {
+                     setTimeout(() => inputRef.current?.focus(), 100)
+                   }
+                 }}
+                 placeholder="Typ hier je antwoord..."
+                 rows={1}
+                 disabled={showCorrectAnswer}
+                 className={`w-full px-4 py-3 text-4xl bg-transparent border-b-4 border-green-400 text-green-400 text-center resize-none overflow-hidden
+                            focus:outline-none focus:border-green-300
+                            placeholder:text-gray-500 placeholder:text-3xl placeholder:font-normal
+                            ${showCorrectAnswer ? 'opacity-50' : ''}`}
+                 style={{ 
+                   fontFamily: 'SchoolschriftLG, Fredoka, cursive',
+                   fontWeight: '800',
+                   color: '#4ade80',
+                   WebkitTextFillColor: '#4ade80',
+                   textShadow: '0 0 2px #000000, 0 0 2px #000000, 0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 30px #4ade80',
+                   minHeight: '3rem',
+                   caretColor: '#4ade80'
+                 }}
+                 autoComplete="off"
+                 autoCorrect="off"
+                 autoCapitalize="off"
+                 spellCheck="false"
+               />
+             </div>
+             
+             {/* Submit button */}
+             <button
+               onClick={handleSubmit}
+               disabled={showCorrectAnswer}
+               className={`mt-6 w-full py-4 rounded-xl border-4 border-white 
+                          text-white text-xl font-bold transition-all duration-200
+                          shadow-lg ${
+                            showCorrectAnswer 
+                              ? 'bg-gray-500 cursor-not-allowed' 
+                              : 'bg-brawl-orange hover:scale-105 hover:bg-brawl-yellow hover:border-brawl-orange active:scale-95'
+                          }`}
+               style={{ fontFamily: 'Fredoka, cursive' }}
+             >
+               {showCorrectAnswer ? 'Even wachten...' : 'Controleren ✓'}
+             </button>
+           </div>
+         </div>
+       </div>
+       
+       {/* Gate status indicator */}
+       <div className="p-4 flex justify-center">
+         <div className={`px-6 py-2 rounded-full text-white font-bold ${
+           isGateOpen ? 'bg-green-500' : 'bg-red-500'
+         }`}>
+           {isGateOpen ? '🚪 Poort open!' : '🔒 Poort gesloten'}
+         </div>
+       </div>
+       
+       {/* Fullscreen hint popup with blur overlay */}
+       {showHintPopup && (
+         <div 
+           className="fixed inset-0 z-50 flex items-center justify-center"
+           style={{
+             backgroundColor: 'rgba(0, 0, 0, 0.7)',
+             backdropFilter: 'blur(8px)',
+             WebkitBackdropFilter: 'blur(8px)'
+           }}
+           onClick={closeHintPopup}
+         >
+           <div 
+             className="bg-brawl-dark-light/95 rounded-3xl p-8 max-w-lg text-center border-4 border-brawl-yellow"
+             onClick={(e) => e.stopPropagation()}
+           >
+             <button
+               onClick={closeHintPopup}
+               className="absolute top-4 right-4 text-white text-2xl font-bold hover:text-brawl-yellow"
+             >
+               ✕
+             </button>
+             <div className="flex items-center justify-center mb-4">
+               <span className="material-icons text-brawl-yellow text-4xl">lightbulb</span>
+             </div>
+             <h2 className="text-2xl font-bold text-brawl-yellow mb-4" style={{ fontFamily: 'Fredoka, cursive' }}>
+               Hint
+             </h2>
+             <p className="text-white text-xl mb-6">
+               {currentQuestion?.hint}
+             </p>
+             <button
+               onClick={closeHintPopup}
+               className="px-6 py-3 bg-brawl-orange rounded-xl text-white font-bold text-lg hover:bg-brawl-yellow hover:text-brawl-dark"
+             >
+               Sluiten
+             </button>
+           </div>
+         </div>
+       )}
+     </div>
+   )
 }
 
 // Main Level2 Screen
 export default function Level2Screen() {
   const typedAnswer = useGameStore((state) => state.typedAnswer)
   const setTypedAnswer = useGameStore((state) => state.setTypedAnswer)
+  const setHintsUsed = useGameStore((state) => state.setHintsUsed)
   const answerTyping = useGameStore((state) => state.answerTyping)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
+  const hintsUsed = useGameStore((state) => state.hintsUsed)
   const inputRef = useRef(null)
   const [isGateOpen, setIsGateOpen] = useState(false)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
@@ -344,47 +419,49 @@ export default function Level2Screen() {
     }
   }, [typedAnswer, currentQuestion])
   
-  const handleSubmit = () => {
-    // Blur input to hide keyboard on iPad
-    if (inputRef.current) {
-      inputRef.current.blur()
-    }
-    
-    // Check if answer is wrong
-    const isCorrect = typedAnswer.toLowerCase().trim() === currentQuestion?.word.toLowerCase().trim()
-    
-    if (!isCorrect) {
-      // First play wrong sound
-      playSound('wrong')
+    const handleSubmit = () => {
+      // Blur input to hide keyboard on iPad
+      if (inputRef.current) {
+        inputRef.current.blur()
+      }
       
-      // Show correct answer for 3 seconds, then move to next question
-      setShowCorrectAnswer(true)
-      setTimeout(() => {
-        setShowCorrectAnswer(false)
-        answerTyping(typedAnswer) // Submit the wrong answer to move forward
-      }, 3000)
-    } else {
-      // Correct answer - submit normally
-      answerTyping(typedAnswer)
-      setIsGateOpen(false)
+      // Check if answer is wrong
+      const isCorrect = typedAnswer.toLowerCase().trim() === currentQuestion?.word.toLowerCase().trim()
+      
+      if (!isCorrect) {
+        // Play wrong sound immediately
+        playSound('wrong')
+        
+        // Show correct answer for 3 seconds, then move to next question
+        setShowCorrectAnswer(true)
+        setTimeout(() => {
+          setShowCorrectAnswer(false)
+          answerTyping(typedAnswer) // Submit the wrong answer to move forward
+        }, 3000)
+      } else {
+        // Correct answer - submit normally
+        answerTyping(typedAnswer)
+        setIsGateOpen(false)
+      }
     }
-  }
   
-  return (
-    <div className="w-full h-full relative">
-      <Canvas shadows>
-        <color attach="background" args={['#1a1a2e']} />
-        <PerspectiveCamera makeDefault position={[0, 5, 12]} fov={60} />
-        <Scene isGateOpen={isGateOpen} />
-      </Canvas>
-      <HUD 
-        typedAnswer={typedAnswer} 
-        setTypedAnswer={setTypedAnswer} 
-        handleSubmit={handleSubmit}
-        isGateOpen={isGateOpen}
-        showCorrectAnswer={showCorrectAnswer}
-        inputRef={inputRef}
-      />
-    </div>
-  )
+    return (
+      <div className="w-full h-full relative">
+        <Canvas shadows>
+          <color attach="background" args={['#1a1a2e']} />
+          <PerspectiveCamera makeDefault position={[0, 5, 12]} fov={60} />
+          <Scene isGateOpen={isGateOpen} />
+        </Canvas>
+        <HUD 
+          typedAnswer={typedAnswer} 
+          setTypedAnswer={setTypedAnswer} 
+          handleSubmit={handleSubmit}
+          isGateOpen={isGateOpen}
+          showCorrectAnswer={showCorrectAnswer}
+          inputRef={inputRef}
+          hintsUsed={hintsUsed}
+          setHintsUsed={setHintsUsed}
+        />
+      </div>
+    )
 }

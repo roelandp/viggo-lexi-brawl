@@ -9,6 +9,7 @@ export const useGameStore = create((set, get) => ({
   currentWordIndex: 0,
   score: 0,
   lives: 3,
+  hintsUsed: 0,
   
   // Words data
   words: [],
@@ -59,18 +60,19 @@ export const useGameStore = create((set, get) => ({
     }
   },
   
-  startLevel2: () => {
-    const { words, currentWordIndex } = get()
-    if (words.length > 0) {
-      const currentWord = words[currentWordIndex]
-      playBackgroundMusic(2)
-      set({
-        currentScreen: 'level2',
-        currentQuestion: currentWord,
-        typedAnswer: ''
-      })
-    }
-  },
+   startLevel2: () => {
+     const { words, currentWordIndex } = get()
+     if (words.length > 0) {
+       const currentWord = words[currentWordIndex]
+       playBackgroundMusic(2)
+       set({
+         currentScreen: 'level2',
+         currentQuestion: currentWord,
+         typedAnswer: '',
+         hintsUsed: 0
+       })
+     }
+   },
   
   generateMultipleChoice: (currentWord) => {
     const { words } = get()
@@ -151,23 +153,23 @@ export const useGameStore = create((set, get) => ({
           typedAnswer: ''
         })
       }
-    } else {
-      // Wrong answer
-      playSound('wrong')
-      const newLives = get().lives - 1
-      if (newLives <= 0) {
-        stopBackgroundMusic()
-        playSound('gameOver')
-        set({ lives: 0, currentScreen: 'gameOver' })
-      } else {
-        set({ lives: newLives, typedAnswer: '' })
-      }
-    }
+   } else {
+       // Wrong answer - sound is handled by the component
+       const newLives = get().lives - 1
+       if (newLives <= 0) {
+         stopBackgroundMusic()
+         playSound('gameOver')
+         set({ lives: 0, currentScreen: 'gameOver' })
+       } else {
+         set({ lives: newLives, typedAnswer: '' })
+       }
+     }
   },
   
-  setTypedAnswer: (answer) => set({ typedAnswer: answer }),
-  
-  setPlayerPosition: (position) => set({ playerPosition: position }),
+   setTypedAnswer: (answer) => set({ typedAnswer: answer }),
+   setHintsUsed: (used) => set({ hintsUsed: used }),
+   
+   setPlayerPosition: (position) => set({ playerPosition: position }),
   
   goToMenu: () => {
     stopBackgroundMusic()
