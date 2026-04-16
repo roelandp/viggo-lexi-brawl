@@ -1,7 +1,9 @@
 import { useGameStore } from '../store/gameStore'
+import wordsData from '../data/words.json'
 
 export default function MenuScreen() {
   const selectToets = useGameStore((state) => state.selectToets)
+  const toetsKeys = Object.keys(wordsData)
   
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-brawl-dark to-brawl-dark-light overflow-hidden">
@@ -22,29 +24,20 @@ export default function MenuScreen() {
       
       {/* Toets Buttons */}
       <div className="flex flex-col gap-6">
-        <button
-          onClick={() => selectToets('toets_26_maart')}
-          className="group relative px-12 py-6 bg-brawl-blue rounded-2xl border-4 border-white 
-                     text-white text-2xl font-bold transition-all duration-200
-                     hover:scale-105 hover:bg-brawl-purple hover:border-brawl-yellow
-                     active:scale-95 shadow-lg"
-          style={{ fontFamily: 'Fredoka, cursive' }}
-        >
-          <span className="relative z-10">Toets 26 Maart</span>
-          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity" />
-        </button>
-        
-        <button
-          onClick={() => selectToets('toets_31_maart')}
-          className="group relative px-12 py-6 bg-brawl-pink rounded-2xl border-4 border-white 
-                     text-white text-2xl font-bold transition-all duration-200
-                     hover:scale-105 hover:bg-brawl-purple hover:border-brawl-yellow
-                     active:scale-95 shadow-lg"
-          style={{ fontFamily: 'Fredoka, cursive' }}
-        >
-          <span className="relative z-10">Toets 31 Maart</span>
-          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity" />
-        </button>
+        {toetsKeys.map((key, index) => (
+          <button
+            key={key}
+            onClick={() => selectToets(key)}
+            className="group relative px-12 py-6 bg-brawl-blue rounded-2xl border-4 border-white 
+                       text-white text-2xl font-bold transition-all duration-200
+                       hover:scale-105 hover:bg-brawl-purple hover:border-brawl-yellow
+                       active:scale-95 shadow-lg"
+            style={{ fontFamily: 'Fredoka, cursive' }}
+          >
+            <span className="relative z-10">{wordsData[key].title}</span>
+            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity" />
+          </button>
+        ))}
       </div>
       
       {/* Decorative stars */}
