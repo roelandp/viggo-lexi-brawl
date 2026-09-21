@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Physics, useBox, usePlane } from '@react-three/cannon'
-import { Text, PerspectiveCamera } from '@react-three/drei'
+import { Text, PerspectiveCamera, Sparkles } from '@react-three/drei'
 import { useGameStore } from '../store/gameStore'
 import { playSound } from '../utils/sounds'
 
@@ -155,6 +155,8 @@ function Scene({ isGateOpen }) {
 // HUD Component
 function HUD({ typedAnswer, setTypedAnswer, handleSubmit, isGateOpen, showCorrectAnswer, inputRef, blurInput, hintsUsed, setHintsUsed }) {
   const score = useGameStore((state) => state.score)
+  const streak = useGameStore((state) => state.streak)
+  const scoreMultiplier = useGameStore((state) => state.scoreMultiplier)
   const lives = useGameStore((state) => state.lives)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
   const currentWordIndex = useGameStore((state) => state.currentWordIndex)

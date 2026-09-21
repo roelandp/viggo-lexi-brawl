@@ -8,6 +8,10 @@ export const useGameStore = create((set, get) => ({
   selectedToets: null,
   currentWordIndex: 0,
   score: 0,
+        streak: 0,
+        scoreMultiplier: 1,
+  streak: 0,
+  scoreMultiplier: 1,
   lives: 3,
   hintsUsed: 0,
   
@@ -39,6 +43,10 @@ export const useGameStore = create((set, get) => ({
         words: selectedQuestions,
         currentWordIndex: 0,
         score: 0,
+        streak: 0,
+        scoreMultiplier: 1,
+  streak: 0,
+  scoreMultiplier: 1,
         lives: 3,
         currentScreen: 'levelSelect'
       })
@@ -94,7 +102,10 @@ export const useGameStore = create((set, get) => ({
     if (answer === currentQuestion.word) {
       playSound('correct')
       // Correct answer
-      const newScore = score + 10
+      const newStreak = get().streak + 1;
+      const newMultiplier = Math.min(1 + Math.floor(newStreak / 3), 5);
+      const newScore = score + (10 * get().scoreMultiplier);
+      set({ streak: newStreak, scoreMultiplier: newMultiplier });
       const newIndex = currentWordIndex + 1
       
       if (newIndex >= words.length) {
@@ -116,6 +127,7 @@ export const useGameStore = create((set, get) => ({
     } else {
       // Wrong answer
       playSound('wrong')
+      set({ streak: 0, scoreMultiplier: 1 });
       const newLives = get().lives - 1
       if (newLives <= 0) {
         stopBackgroundMusic()
@@ -135,7 +147,10 @@ export const useGameStore = create((set, get) => ({
     if (normalizedAnswer === normalizedWord) {
       playSound('correct')
       // Correct answer
-      const newScore = score + 15
+      const newStreak = get().streak + 1;
+      const newMultiplier = Math.min(1 + Math.floor(newStreak / 3), 5);
+      const newScore = score + (15 * get().scoreMultiplier);
+      set({ streak: newStreak, scoreMultiplier: newMultiplier });
       const newIndex = currentWordIndex + 1
       
       if (newIndex >= words.length) {
@@ -155,6 +170,8 @@ export const useGameStore = create((set, get) => ({
       }
    } else {
        // Wrong answer - sound is handled by the component
+       set({ streak: 0, scoreMultiplier: 1 });
+      set({ streak: 0, scoreMultiplier: 1 });
        const newLives = get().lives - 1
        if (newLives <= 0) {
          stopBackgroundMusic()
@@ -179,6 +196,10 @@ export const useGameStore = create((set, get) => ({
       words: [],
       currentWordIndex: 0,
       score: 0,
+        streak: 0,
+        scoreMultiplier: 1,
+  streak: 0,
+  scoreMultiplier: 1,
       lives: 3,
       currentQuestion: null,
       typedAnswer: ''

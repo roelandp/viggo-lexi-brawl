@@ -1,8 +1,9 @@
 import { useRef, useEffect, useState, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Physics, useSphere, useBox, usePlane } from '@react-three/cannon'
-import { OrbitControls, Text, useTexture, useGLTF } from '@react-three/drei'
+import { OrbitControls, Text, useTexture, useGLTF, Sparkles } from '@react-three/drei'
 import { useGameStore } from '../store/gameStore'
+import { playSound } from '../utils/sounds'
 import * as THREE from 'three'
 
 // Floor component
@@ -358,14 +359,15 @@ function Scene({ onPositionChange, joystickRef, onJump }) {
     return positions
   }, [multipleChoiceOptions, currentWord])
   
-  const handleCollect = (isCorrect) => {
+    const handleCollect = (isCorrect) => {
     if (isCorrect) {
-      // Get the word that was collected
+      playSound('correct');
       const correctGem = gemPositions.find(g => g.isCorrect)
       if (correctGem) {
         answerMultipleChoice(correctGem.word)
       }
     } else {
+      playSound('wrong');
       answerMultipleChoice('')
     }
   }
@@ -377,6 +379,7 @@ function Scene({ onPositionChange, joystickRef, onJump }) {
   return (
     <Physics gravity={[0, -10, 0]}>
       <ambientLight intensity={0.5} />
+      <Sparkles count={200} scale={20} size={4} speed={0.4} opacity={0.6} color={'#ffc82a'} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
       
       <Floor />
@@ -409,6 +412,8 @@ function Scene({ onPositionChange, joystickRef, onJump }) {
 // HUD Overlay
 function HUD() {
   const score = useGameStore((state) => state.score)
+  const streak = useGameStore((state) => state.streak)
+  const scoreMultiplier = useGameStore((state) => state.scoreMultiplier)
   const lives = useGameStore((state) => state.lives)
   const currentQuestion = useGameStore((state) => state.currentQuestion)
   const currentWordIndex = useGameStore((state) => state.currentWordIndex)
