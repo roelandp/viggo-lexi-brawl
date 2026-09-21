@@ -4,6 +4,7 @@ import { Physics, useSphere, useBox, usePlane } from '@react-three/cannon'
 import { OrbitControls, Text, useTexture, useGLTF, Sparkles } from '@react-three/drei'
 import { useGameStore } from '../store/gameStore'
 import { playSound } from '../utils/sounds'
+import confetti from 'canvas-confetti'
 import * as THREE from 'three'
 
 // Floor component
@@ -97,7 +98,7 @@ function Player({ onPositionChange, joystickRef, onJump }) {
   
   const velocity = useRef([0, 0, 0])
   const position = useRef([0, 1, 0])
-  const canJump = useRef(true)
+  const jumpsLeft = useRef(2)
   const isGrounded = useRef(true)
   
   useEffect(() => {
@@ -113,16 +114,16 @@ function Player({ onPositionChange, joystickRef, onJump }) {
   useFrame(() => {
     // If y velocity is near 0, we're grounded
     isGrounded.current = Math.abs(velocity.current[1]) < 0.1
+    if (isGrounded.current) {
+      jumpsLeft.current = 2
+    }
   })
   
   // Jump function
   const jump = () => {
-    if (isGrounded.current && canJump.current) {
-      api.velocity.set(velocity.current[0], 8, velocity.current[2])
-      canJump.current = false
-      setTimeout(() => {
-        canJump.current = true
-      }, 500)
+    if (jumpsLeft.current > 0) {
+      api.velocity.set(velocity.current[0], 12, velocity.current[2])
+      jumpsLeft.current -= 1
     }
   }
   
@@ -362,6 +363,7 @@ function Scene({ onPositionChange, joystickRef, onJump }) {
     const handleCollect = (isCorrect) => {
     if (isCorrect) {
       playSound('correct');
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
       const correctGem = gemPositions.find(g => g.isCorrect)
       if (correctGem) {
         answerMultipleChoice(correctGem.word)
@@ -377,7 +379,7 @@ function Scene({ onPositionChange, joystickRef, onJump }) {
   }
   
   return (
-    <Physics gravity={[0, -10, 0]}>
+    <Physics gravity={[0, -25, 0]}>
       <ambientLight intensity={0.5} />
       <Sparkles count={200} scale={20} size={4} speed={0.4} opacity={0.6} color={'#ffc82a'} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
@@ -424,9 +426,16 @@ function HUD() {
     <div className="absolute inset-0 pointer-events-none">
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
-        {/* Score */}
-        <div className="bg-brawl-dark-light/80 rounded-xl px-4 py-2 border-2 border-brawl-yellow">
-          <span className="text-brawl-yellow font-bold text-xl">⭐ {score}</span>
+        {/* Score & Streak */}
+        <div className="flex flex-col gap-2">
+          <div className="bg-brawl-dark-light/80 rounded-xl px-4 py-2 border-2 border-brawl-yellow">
+            <span className="text-brawl-yellow font-bold text-xl">⭐ {score}</span>
+          </div>
+          {streak >= 3 && (
+            <div className="bg-brawl-purple rounded-xl px-4 py-2 border-2 border-white animate-pulse shadow-lg">
+              <span className="text-white font-bold text-md">🔥 {streak}x ({scoreMultiplier}x Ptn!)</span>
+            </div>
+          )}
         </div>
         
         {/* Lives */}

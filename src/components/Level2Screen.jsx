@@ -4,6 +4,7 @@ import { Physics, useBox, usePlane } from '@react-three/cannon'
 import { Text, PerspectiveCamera, Sparkles } from '@react-three/drei'
 import { useGameStore } from '../store/gameStore'
 import { playSound } from '../utils/sounds'
+import confetti from 'canvas-confetti'
 
 // Gate component (the boss)
 function Gate({ isOpen }) {
@@ -442,6 +443,7 @@ export default function Level2Screen() {
         }, 3000)
       } else {
         // Correct answer - submit normally
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         answerTyping(typedAnswer)
         setIsGateOpen(false)
       }
